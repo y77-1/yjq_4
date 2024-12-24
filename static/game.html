@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>寻宝游戏</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div id="player-info">
+        <h2>玩家信息</h2>
+        <div id="player-details"></div>
+        <div id="player-score">当前分数: 0</div>
+        <button onclick="game.toggleMusic()">播放/暂停音乐</button>
+    </div>
+    
+    <div id="game-container">
+        <div class="loading">正在加载游戏数据...</div>
+    </div>
+    
+    <div id="history-container">
+        <h3>游戏历史</h3>
+        <div id="history-list"></div>
+        <div id="score-history"></div>
+    </div>
+
+    <script src="js/game.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 检查是否已登录
+            const playerInfo = localStorage.getItem('playerInfo');
+            if (!playerInfo) {
+                // 如果没有登录信息，重定向到登录页面
+                window.location.href = '/';
+                return;
+            }
+
+            const player = JSON.parse(playerInfo);
+            const playerDetails = document.getElementById('player-details');
+            playerDetails.innerHTML = `
+                <p>ID: ${player.id}</p>
+                <p>昵称: ${player.nickname}</p>
+            `;
+            
+            function updateScore() {
+                const scoreDiv = document.getElementById('player-score');
+                scoreDiv.textContent = `当前分数: ${game.calculateScore()}`;
+            }
+            
+            async function updateScoreHistory() {
+                try {
+                    const scores = await game.loadPlayerHistory();
+                    const scoreHistory = document.getElementById('score-history');
+                    if (scores && scores.length > 0) {
+                        scoreHistory.innerHTML = `
+                            <h4>历史得分</h4>
+                            ${scores.map(s => `
+                                <div class="score-record">
+                                    <p>得分: ${s.score}</p>
+                                    <p>物品: ${s.items}</p>
+                                    <p>完成时间: ${new Date(s.completed_at).toLocaleString()}</p>
+                                </div>
+                            `).join('')}
+                        `;
+                    } else {
+                        scoreHistory.innerHTML = '<p>暂无历史记录</p>';
+                    }
+                } catch (error) {
+                    console.error('加载历史记录失败:', error);
+                    document.getElementById('score-history').innerHTML = '<p>加载历史记录失败</p>';
+                }
+            }
+            
+            updateScore();
+            updateScoreHistory();
+            setInterval(updateScore, 1000);
+        });
+    </script>
+</body>
+</html> 

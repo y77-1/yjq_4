@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>寻宝游戏 - 登录</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="login-container">
+        <h2>寻宝游戏登录</h2>
+        <div class="login-form">
+            <input type="text" id="playerId" placeholder="输入玩家ID">
+            <input type="text" id="nickname" placeholder="输入昵称">
+            <button onclick="login()">开始游戏</button>
+        </div>
+        <div id="error-message" class="error-message" style="display: none;"></div>
+    </div>
+
+    <script>
+        async function login() {
+            const playerId = document.getElementById('playerId').value.trim();
+            const nickname = document.getElementById('nickname').value.trim();
+            
+            if (!playerId || !nickname) {
+                showError('请输入玩家ID和昵称');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/player', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ id: playerId, nickname: nickname })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    // 保存玩家信息到 localStorage
+                    localStorage.setItem('playerInfo', JSON.stringify({
+                        id: playerId,
+                        nickname: nickname,
+                        history: [],
+                        score: 0
+                    }));
+                    // 跳转到游戏页面
+                    window.location.href = '/game';
+                } else {
+                    showError(data.error || '登录失败');
+                }
+            } catch (error) {
+                showError('网络错误，请重试');
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html> 
